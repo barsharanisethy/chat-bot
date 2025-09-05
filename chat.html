@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title> Chatbot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Floating Button -->
+  <button class="chat-btn" onclick="toggleChat()">🤖</button>
+
+  <!-- Chat Window -->
+  <div class="chat-container" id="chatWindow">
+    <div class="chat-header">⚡ Gaming Chatbot</div>
+    <div id="chatbox"></div>
+    <div id="options" class="options"></div>
+  </div>
+
+  <script>
+  let chatbotData = {};
+  let selectedLanguage = "English"; // default
+
+  fetch("chatdata.json")
+    .then(res => res.json())
+    .then(data => { chatbotData = data; });
+
+  function toggleChat() {
+    let chatWindow = document.getElementById("chatWindow");
+    chatWindow.style.display = (chatWindow.style.display === "flex") ? "none" : "flex";
+    if (chatWindow.style.display === "flex") showLanguageSelection();
+  }
+
+  function showLanguageSelection() {
+    let chatbox = document.getElementById("chatbox");
+    let optionsDiv = document.getElementById("options");
+    chatbox.innerHTML = `<div class='message bot'><b>Bot:</b> Please select your language 🌐</div>`;
+    optionsDiv.innerHTML = "";
+
+    ["English", "Hindi", "Odia"].forEach(lang => {
+      let btn = document.createElement("button");
+      btn.textContent = lang;
+      btn.onclick = () => setLanguage(lang);
+      optionsDiv.appendChild(btn);
+    });
+  }
+
+  function setLanguage(lang) {
+    selectedLanguage = lang;
+    let chatbox = document.getElementById("chatbox");
+    chatbox.innerHTML += `<div class='message user'><b>You:</b> ${lang}</div>`;
+    chatbox.innerHTML += `<div class='message bot'><b>Bot:</b> You selected ${lang} ✅</div>`;
+    startChat();
+  }
+
+  function startChat() {
+    let chatbox = document.getElementById("chatbox");
+    chatbox.innerHTML += `<div class='message bot'><b>Bot:</b> Welcome 🎮🔥</div>`;
+    showSuggestions("start");
+  }
+
+  function showSuggestions(key) {
+    let optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
+    if (!chatbotData[selectedLanguage][key]) return;
+
+    let suggestions = chatbotData[selectedLanguage][key].suggestions || [];
+    suggestions.forEach(s => {
+      let btn = document.createElement("button");
+      btn.textContent = s;
+      btn.onclick = () => handleUserChoice(s);
+      optionsDiv.appendChild(btn);
+    });
+  }
+
+  function handleUserChoice(choice) {
+    let chatbox = document.getElementById("chatbox");
+    chatbox.innerHTML += `<div class='message user'><b>You:</b> ${choice}</div>`;
+
+    // Typing effect
+    let typingDiv = document.createElement("div");
+    typingDiv.className = "message bot typing";
+    typingDiv.innerHTML = `<span></span><span></span><span></span>`;
+    chatbox.appendChild(typingDiv);
+    chatbox.scrollTop = chatbox.scrollHeight;
+
+    setTimeout(() => {
+      typingDiv.remove();
+      let reply = chatbotData[selectedLanguage][choice]?.reply || "🤔 I don't understand that.";
+      chatbox.innerHTML += `<div class='message bot'><b>Bot:</b> ${reply}</div>`;
+      chatbox.scrollTop = chatbox.scrollHeight;
+      showSuggestions(choice);
+    }, 1200);
+  }
+  </script>
+</body>
+</html>
